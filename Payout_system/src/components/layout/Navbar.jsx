@@ -110,7 +110,7 @@ const Navbar = () => {
         <div className="logo">
           <Link to="/">
             <span className="logo-text">
-              masa<span className="gradient-letter-navbar">i</span>pay
+              masa<span className="gradient-letter-navbar">i</span>pe
             </span>
             <span className="registered">®</span>
           </Link>
