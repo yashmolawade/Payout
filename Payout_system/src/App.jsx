@@ -3,10 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import LandingPage from "./pages/LandingPage";
-import Home from "./pages/Home";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import { lazyLoad } from "./utils/lazyImport.jsx";
+
+// Use improved lazy loading with error boundaries
+const LandingPage = lazyLoad(() => import("./pages/LandingPage"));
+const Home = lazyLoad(() => import("./pages/Home"));
+const Login = lazyLoad(() => import("./pages/Login"));
+const Register = lazyLoad(() => import("./pages/Register"));
 
 function App() {
   return (
