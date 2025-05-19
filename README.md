@@ -8,7 +8,7 @@ This is a React-based web application built with Vite, TypeScript, and Firebase.
 
 - **Frontend Framework**: React 18
 - **Build Tool**: Vite
-- **Language**: TypeScript/JavaScript
+- **Language**: JavaScript
 - **Styling**: Tailwind CSS
 - **Authentication**: Firebase
 - **Routing**: React Router DOM v7
