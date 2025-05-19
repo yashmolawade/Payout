@@ -356,10 +356,7 @@ const ChatSection = ({ onUnreadCountChange }) => {
         {userData?.role === "admin" && (
           <div className="partner-selector">
             <select
-<<<<<<< HEAD
             style={{backgroundColor: "black", color: "white"}}
-=======
->>>>>>> 298dbcf92acbe47c25199517c4ec354cba465619
               value={selectedPartnerId || ""}
               onChange={(e) => {
                 const partnerId = e.target.value;
