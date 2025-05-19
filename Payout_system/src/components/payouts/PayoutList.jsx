@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { collection, doc, updateDoc, addDoc } from "firebase/firestore";
 import { db } from "../../firebase/config";
 import { useAuth } from "../../context/AuthContext";
@@ -11,55 +11,54 @@ import {
 } from "../../utils/auditTracker";
 import "./Payouts.css";
 import CryptoJS from "crypto-js";
+import { useTheme } from "../../context/ThemeContext";
 
-const PayoutList = ({ payouts, isAdmin }) => {
+const PayoutList = ({ payouts, isAdmin, emailSearch, setEmailSearch }) => {
   const { currentUser } = useAuth();
+  const { darkMode } = useTheme();
   const [processingId, setProcessingId] = useState(null);
-  const [emailSearch, setEmailSearch] = useState("");
   const [selectedPayout, setSelectedPayout] = useState(null);
   const [sendingId, setSendingId] = useState(null);
   const [sendStatus, setSendStatus] = useState({});
 
-  // Filter payouts by email search
-  const filteredPayouts = payouts.filter(
-    (payout) =>
-      !emailSearch ||
-      payout.mentorEmail.toLowerCase().includes(emailSearch.toLowerCase())
-  );
+  // Add hover effect styles for dark mode
+  useEffect(() => {
+    if (darkMode) {
+      const style = document.createElement("style");
+      style.id = "payout-table-hover-style";
+      style.textContent = `
+        /* Header styles for dark mode */
+        [data-theme="dark"] .payout-table th,
+        .dark-mode .payout-table th {
+          background-color: black !important;
+          color: white !important;
+          border-bottom: 1px solid #333 !important;
+        }
+        
+        /* Row hover styles */
+        [data-theme="dark"] .payout-table tr:hover,
+        .dark-mode .payout-table tr:hover {
+          background-color: #ff3334 !important;
+          color: black !important;
+        }
+        
+        [data-theme="dark"] .payout-table tr:hover td,
+        .dark-mode .payout-table tr:hover td {
+          color: black !important;
+        }
+      `;
+      document.head.appendChild(style);
 
-  // Calculate cumulative payouts by mentor
-  const mentorPayouts = filteredPayouts.reduce((acc, payout) => {
-    const email = payout.mentorEmail;
-    if (!acc[email]) {
-      acc[email] = {
-        paid: 0,
-        pending: 0,
-        underReview: 0,
+      return () => {
+        const existingStyle = document.getElementById(
+          "payout-table-hover-style"
+        );
+        if (existingStyle) {
+          existingStyle.remove();
+        }
       };
     }
-    if (payout.status === PAYMENT_STATUS.PAID) {
-      acc[email].paid += payout.netAmount || 0;
-    } else if (payout.status === PAYMENT_STATUS.PENDING) {
-      acc[email].pending += payout.netAmount || 0;
-    } else if (payout.status === PAYMENT_STATUS.UNDER_REVIEW) {
-      acc[email].underReview += payout.netAmount || 0;
-    }
-    return acc;
-  }, {});
-
-  // Calculate total amounts
-  const totalPaid = Object.values(mentorPayouts).reduce(
-    (sum, mentor) => sum + mentor.paid,
-    0
-  );
-  const totalPending = Object.values(mentorPayouts).reduce(
-    (sum, mentor) => sum + mentor.pending,
-    0
-  );
-  const totalUnderReview = Object.values(mentorPayouts).reduce(
-    (sum, mentor) => sum + mentor.underReview,
-    0
-  );
+  }, [darkMode]);
 
   const handlePayment = (payout) => {
     setSelectedPayout(payout);
@@ -108,6 +107,16 @@ const PayoutList = ({ payouts, isAdmin }) => {
         updatedPayout,
         previousStatus
       );
+
+      // Mark attendance as attended if sessionId exists
+      if (payout.sessionId) {
+        const sessionRef = doc(db, "sessions", payout.sessionId);
+        await updateDoc(sessionRef, {
+          isAttended: true,
+          isPaid: true,
+          uiStatus: "paid",
+        });
+      }
 
       setSelectedPayout(null);
     } catch (error) {
@@ -158,11 +167,24 @@ const PayoutList = ({ payouts, isAdmin }) => {
       // If moving from under review to pending, update the session status
       if (payout.status === PAYMENT_STATUS.UNDER_REVIEW && payout.sessionId) {
         const sessionRef = doc(db, "sessions", payout.sessionId);
-        await updateDoc(sessionRef, {
-          status: "pending",
-          reviewedAt: Date.now(),
-          reviewedBy: currentUser.email,
-        });
+
+        // If marking it as paid directly from under review, update isPaid as well
+        if (newStatus === PAYMENT_STATUS.PAID) {
+          await updateDoc(sessionRef, {
+            status: "paid",
+            reviewedAt: Date.now(),
+            reviewedBy: currentUser.email,
+            isPaid: true,
+            uiStatus: "paid",
+          });
+        } else {
+          await updateDoc(sessionRef, {
+            status: "pending",
+            reviewedAt: Date.now(),
+            reviewedBy: currentUser.email,
+            uiStatus: newStatus === PAYMENT_STATUS.PAID ? "paid" : "review",
+          });
+        }
 
         await createActivityLog({
           userId: currentUser.uid,
@@ -203,18 +225,30 @@ const PayoutList = ({ payouts, isAdmin }) => {
     window.open(gmailUrl, "_blank");
   };
 
+  // Calculate total amounts directly from payouts
+  const totalPaid = payouts.reduce(
+    (sum, payout) =>
+      sum + (payout.status === PAYMENT_STATUS.PAID ? payout.netAmount || 0 : 0),
+    0
+  );
+  const totalPending = payouts.reduce(
+    (sum, payout) =>
+      sum +
+      (payout.status === PAYMENT_STATUS.PENDING ? payout.netAmount || 0 : 0),
+    0
+  );
+  const totalUnderReview = payouts.reduce(
+    (sum, payout) =>
+      sum +
+      (payout.status === PAYMENT_STATUS.UNDER_REVIEW
+        ? payout.netAmount || 0
+        : 0),
+    0
+  );
+
   return (
     <div className="payout-list">
-      <div className="payout-search">
-        <input
-          type="text"
-          placeholder="Search by mentor email..."
-          value={emailSearch}
-          onChange={(e) => setEmailSearch(e.target.value)}
-          className="search-input"
-        />
-      </div>
-      {filteredPayouts.length === 0 ? (
+      {payouts.length === 0 ? (
         <div className="empty-state">
           <h3>No payouts found</h3>
           <p>
@@ -255,7 +289,7 @@ const PayoutList = ({ payouts, isAdmin }) => {
                 </tr>
               </thead>
               <tbody>
-                {filteredPayouts.map((payout) => (
+                {payouts.map((payout) => (
                   <tr key={payout.id}>
                     <td>{new Date(payout.createdAt).toLocaleDateString()}</td>
                     {isAdmin && <td>{payout.mentorEmail}</td>}
@@ -272,6 +306,7 @@ const PayoutList = ({ payouts, isAdmin }) => {
                       </span>
                     </td>
                     <td className="actions">
+                      {/* Secondary buttons first */}
                       <button
                         className="action-btn secondary"
                         onClick={() => handleGeneratePdf(payout)}
@@ -286,6 +321,8 @@ const PayoutList = ({ payouts, isAdmin }) => {
                       >
                         Send Receipt (Gmail)
                       </button>
+
+                      {/* Admin action buttons after secondary buttons */}
                       {isAdmin &&
                         payout.status === PAYMENT_STATUS.UNDER_REVIEW && (
                           <button

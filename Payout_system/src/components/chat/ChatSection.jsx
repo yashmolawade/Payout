@@ -356,10 +356,7 @@ const ChatSection = ({ onUnreadCountChange }) => {
         {userData?.role === "admin" && (
           <div className="partner-selector">
             <select
-<<<<<<< HEAD
-            style={{backgroundColor: "black", color: "white"}}
-=======
->>>>>>> 298dbcf92acbe47c25199517c4ec354cba465619
+              style={{ backgroundColor: "black", color: "white" }}
               value={selectedPartnerId || ""}
               onChange={(e) => {
                 const partnerId = e.target.value;
@@ -370,9 +367,18 @@ const ChatSection = ({ onUnreadCountChange }) => {
                 setChatPartner(partner);
               }}
             >
-              <option style={{backgroundColor: "black", color: "white"}} value="">Select a mentor to chat with</option>
+              <option
+                style={{ backgroundColor: "black", color: "white" }}
+                value=""
+              >
+                Select a mentor to chat with
+              </option>
               {availablePartners.map((partner) => (
-                <option style={{backgroundColor: "black", color: "white"}} key={partner.id} value={partner.id}>
+                <option
+                  style={{ backgroundColor: "black", color: "white" }}
+                  key={partner.id}
+                  value={partner.id}
+                >
                   {partner.name
                     ? `${partner.name} (${partner.email})`
                     : partner.email}

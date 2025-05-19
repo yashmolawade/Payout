@@ -1,52 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Layout from "../components/layout/Layout";
 import AuthForm from "../components/auth/AuthForm";
 import { useLoading } from "../contexts/LoadingContext";
+import micon from "../assets/micon.svg";
 
 const Login = () => {
-  const { currentUser, loading } = useAuth();
-  const [showLoader, setShowLoader] = useState(false);
-  const { showLoader: showLoading, hideLoader } = useLoading();
+  const { currentUser, loading, login } = useAuth();
+  const { showLoader, hideLoader } = useLoading();
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Only set the document title, no more test logs
     document.title = "masaipe - login";
+    const link = document.querySelector("link[rel~='icon']");
+    if (link) {
+      link.href = micon;
+    } else {
+      const newLink = document.createElement("link");
+      newLink.rel = "shortcut icon";
+      newLink.type = "image/svg+xml";
+      newLink.href = micon;
+      document.head.appendChild(newLink);
+    }
   }, []);
 
   useEffect(() => {
     if (loading) {
-      showLoading("Loading login...");
+      showLoader("Loading login...");
     } else {
       hideLoader();
     }
-  }, [loading, showLoading, hideLoader]);
+  }, [loading, showLoader, hideLoader]);
 
-  // Hide loader on successful login (redirect)
-  useEffect(() => {
-    if (currentUser) {
-      hideLoader();
-    }
-  }, [currentUser, hideLoader]);
-
-  // Add artificial delay after login is successful
-  useEffect(() => {
-    if (currentUser && !showLoader) {
-      setShowLoader(true);
-      setTimeout(() => {
-        setShowLoader(false);
-      }, 3000);
-    }
-  }, [currentUser]);
-
-  if (loading) {
-    return null;
-  }
-
-  if (showLoader) {
-    return null;
-  }
+  const handleLogin = useCallback(
+    async (email, password) => {
+      try {
+        setError("");
+        await login(email, password);
+      } catch (error) {
+        setError(error.message || "Failed to login");
+      }
+    },
+    [login]
+  );
 
   if (currentUser) {
     return <Navigate to="/dashboard" replace />;
@@ -54,7 +51,14 @@ const Login = () => {
 
   return (
     <Layout>
-      <AuthForm isLogin={true} />
+      <div className="auth-container">
+        <AuthForm
+          isLogin={true}
+          onSubmit={handleLogin}
+          error={error}
+          loading={loading}
+        />
+      </div>
     </Layout>
   );
 };

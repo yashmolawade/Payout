@@ -142,24 +142,20 @@ const SessionCard = ({ session, isAdmin, payouts }) => {
   // Calculate net payable amount
   const netPayableAmount = grossAmount - taxes - platformFee - gst;
 
+  // Use the uiStatus field for consistent display
+  const displayStatusMap = {
+    paid: "Paid",
+    unpaid: "Unpaid",
+    review: "Under Review",
+  };
+
+  const displayStatus = displayStatusMap[session.uiStatus] || "Unpaid";
+  const statusClass = session.uiStatus || "unpaid";
+
   const isPaid = payoutStatus === "paid";
   const isPending = payoutStatus === "pending";
   const isUnderReview = payoutStatus === "underReview";
   const isAttended = session.isAttended || false;
-  const displayStatus = isPaid
-    ? "Paid"
-    : isPending
-    ? "Pending"
-    : isUnderReview
-    ? "Under Review"
-    : "Unpaid";
-  const statusClass = isPaid
-    ? "paid"
-    : isPending
-    ? "pending"
-    : isUnderReview
-    ? "review"
-    : "unpaid";
 
   const handleDelete = async () => {
     if (isPaid) {
@@ -349,12 +345,14 @@ const SessionCard = ({ session, isAdmin, payouts }) => {
             isAttended: true,
             attendedAt: Date.now(),
             status: SESSION_STATUS.REVIEW,
+            uiStatus: "review",
           };
 
           await updateDoc(sessionRef, {
             isAttended: true,
             attendedAt: Date.now(),
             status: SESSION_STATUS.REVIEW,
+            uiStatus: "review",
           });
 
           // Log the attendance marking with our new audit tracking function
@@ -416,10 +414,22 @@ const SessionCard = ({ session, isAdmin, payouts }) => {
   return (
     <>
       <div className="session-card">
-        <div className={`status-badge ${statusClass}`}>{displayStatus}</div>
         <div className="session-details">
           <p className="detail-row">
-            <strong>Mentor:</strong> <span>{session.mentorEmail}</span>
+            <strong>Mentor:</strong>
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                flexWrap: "wrap",
+              }}
+            >
+              {session.mentorEmail}
+              <span className={`status-badge ${statusClass}`}>
+                {displayStatus}
+              </span>
+            </span>
           </p>
           <p className="detail-row">
             <strong>Type:</strong>{" "}

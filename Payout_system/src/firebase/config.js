@@ -6,9 +6,10 @@ import {
   getDocs,
   query,
   limit,
-  enableIndexedDbPersistence,
-  enableMultiTabIndexedDbPersistence,
+  initializeFirestore,
   CACHE_SIZE_UNLIMITED,
+  persistentLocalCache,
+  persistentMultipleTabManager,
 } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 import { getDatabase } from "firebase/database";
@@ -23,41 +24,34 @@ const firebaseConfig = {
   messagingSenderId: "743805068795",
   appId: "1:743805068795:web:187baed199b89e1883975e",
   measurementId: "G-VP50RXPF6Q",
-  databaseURL: "https://payout-2-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  databaseURL:
+    "https://payout-2-default-rtdb.asia-southeast1.firebasedatabase.app/",
 };
 
 // Prevent multiple initializations in dev mode / hot reloads
 const app = initializeApp(firebaseConfig);
 
 const auth = getAuth(app);
-const db = getFirestore(app);
+
+// Initialize Firestore with persistent cache configuration
+let db;
+try {
+  db = initializeFirestore(app, {
+    cache: persistentLocalCache({
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+      tabManager: persistentMultipleTabManager(),
+    }),
+  });
+  console.log("Firestore initialized with persistent cache");
+} catch (err) {
+  console.error("Error initializing Firestore with persistent cache:", err);
+  // Fallback to default configuration if persistent cache fails
+  db = getFirestore(app);
+  console.log("Firestore initialized with default configuration");
+}
+
 const analytics = getAnalytics(app);
 const database = getDatabase(app); // Add Realtime Database
-
-// Enable offline persistence with unlimited cache size
-try {
-  enableIndexedDbPersistence(db, {
-    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-  }).catch((err) => {
-    if (err.code === "failed-precondition") {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time
-      console.log("Persistence failed: Multiple tabs open");
-      // Try enabling multi-tab persistence instead
-      enableMultiTabIndexedDbPersistence(db, {
-        cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-      }).catch((err) => {
-        console.error("Failed to enable multi-tab persistence:", err);
-      });
-    } else if (err.code === "unimplemented") {
-      // The current browser does not support all of the features required to enable persistence
-      console.log("Persistence not supported by this browser");
-    } else {
-      console.error("Unknown persistence error:", err);
-    }
-  });
-} catch (err) {
-  console.error("Error setting up persistence:", err);
-}
 
 // Verify that the audit_logs collection exists and is accessible
 const verifyAuditLogsCollection = async () => {

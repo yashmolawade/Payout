@@ -23,6 +23,7 @@ import { PAYMENT_STATUS } from "../../types/index";
 import "./Dashboard.css";
 import { createActivityLog } from "../../utils/auditTracker";
 import { useLoading } from "../../contexts/LoadingContext";
+import { useTheme } from "../../context/ThemeContext";
 
 const formatPayoutChanges = (beforeData, afterData) => {
   const changes = [];
@@ -59,6 +60,56 @@ const AuditLogsList = ({ searchTerm = "", actionType = "all" }) => {
   const [hasMore, setHasMore] = useState(false);
   const [hasPrevious, setHasPrevious] = useState(false);
   const LOGS_PER_PAGE = 10;
+  const { darkMode } = useTheme();
+
+  useEffect(() => {
+    // Add custom style for dark mode directly in this component
+    if (darkMode) {
+      const style = document.createElement("style");
+      style.id = "audit-logs-hover-style";
+      style.textContent = `
+        /* Ensure the header has black background in dark mode */
+        [data-theme="dark"] .audit-logs-table th,
+        .dark-mode .audit-logs-table th {
+          background-color: black !important;
+          color: white !important;
+          border-bottom: 1px solid #333 !important;
+        }
+        
+        /* Row hover styles */
+        [data-theme="dark"] .audit-logs-table tr:hover,
+        .dark-mode .audit-logs-table tr:hover {
+          background-color: #ff3334 !important;
+          color: black !important;
+        }
+        
+        [data-theme="dark"] .audit-logs-table tr:hover td,
+        .dark-mode .audit-logs-table tr:hover td {
+          color: black !important;
+        }
+
+        /* Apply the same hover effect to payout table */
+        [data-theme="dark"] .payout-table tr:hover,
+        .dark-mode .payout-table tr:hover {
+          background-color: #ff3334 !important;
+          color: black !important;
+        }
+        
+        [data-theme="dark"] .payout-table tr:hover td,
+        .dark-mode .payout-table tr:hover td {
+          color: black !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      return () => {
+        const existingStyle = document.getElementById("audit-logs-hover-style");
+        if (existingStyle) {
+          existingStyle.remove();
+        }
+      };
+    }
+  }, [darkMode]);
 
   useEffect(() => {
     setLoading(true);
@@ -560,6 +611,10 @@ const AdminDashboard = () => {
   // Add new state for tracking payout changes
   const [payoutChanges, setPayoutChanges] = useState({});
   const { showLoader, hideLoader } = useLoading();
+  const [emailSearch, setEmailSearch] = useState("");
+  const { darkMode } = useTheme();
+  const [payoutsPage, setPayoutsPage] = useState(1);
+  const PAYOUTS_PER_PAGE = 10;
 
   const handleError = useCallback((error, context) => {
     let errorMessage = "An error occurred. Please try again.";
@@ -634,12 +689,24 @@ const AdminDashboard = () => {
         sessionsQuery,
         (snapshot) => {
           try {
-            const sessionsData = snapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-              uiStatus: doc.data().isPaid ? "paid" : "unpaid",
-            }));
+            const sessionsData = snapshot.docs.map((doc) => {
+              const data = doc.data();
+              // Calculate UI status without depending on payouts yet
+              let uiStatus = "unpaid";
+              if (data.isPaid) {
+                uiStatus = "paid";
+              } else if (data.status === "review") {
+                uiStatus = "review";
+              }
+
+              return {
+                id: doc.id,
+                ...data,
+                uiStatus,
+              };
+            });
             setSessions(sessionsData);
+            // We'll update uiStatus based on payouts in a separate effect
             setLoading(false);
             setError(null);
           } catch (error) {
@@ -996,10 +1063,9 @@ const AdminDashboard = () => {
       const mentorMatch =
         !selectedMentor || session.mentorId === selectedMentor.id;
 
+      // Use the uiStatus field for cleaner filtering
       const statusMatch =
-        statusFilter === "all" ||
-        (statusFilter === "paid" && session.isPaid) ||
-        (statusFilter === "unpaid" && !session.isPaid);
+        statusFilter === "all" || statusFilter === session.uiStatus;
 
       return dateMatch && mentorMatch && statusMatch;
     });
@@ -1008,24 +1074,51 @@ const AdminDashboard = () => {
   // Filter payouts based on date
   const filteredPayouts = useMemo(() => {
     return payouts.filter((payout) => {
-      if (!payoutDateFilter.startDate && !payoutDateFilter.endDate) {
-        return true;
-      }
+      // First apply date filtering
+      const dateMatch = (() => {
+        if (!payoutDateFilter.startDate && !payoutDateFilter.endDate) {
+          return true;
+        }
 
-      const payoutDate = new Date(payout.createdAt);
-      const startDate = payoutDateFilter.startDate
-        ? new Date(payoutDateFilter.startDate)
-        : null;
-      const endDate = payoutDateFilter.endDate
-        ? new Date(payoutDateFilter.endDate)
-        : null;
+        const payoutDate = new Date(payout.createdAt);
+        const startDate = payoutDateFilter.startDate
+          ? new Date(payoutDateFilter.startDate)
+          : null;
+        const endDate = payoutDateFilter.endDate
+          ? new Date(payoutDateFilter.endDate)
+          : null;
 
-      return (
-        (!startDate || payoutDate >= startDate) &&
-        (!endDate || payoutDate <= new Date(endDate).setHours(23, 59, 59))
-      );
+        return (
+          (!startDate || payoutDate >= startDate) &&
+          (!endDate || payoutDate <= new Date(endDate).setHours(23, 59, 59))
+        );
+      })();
+
+      // Then apply status filtering
+      const statusMatch =
+        statusFilter === "all" ||
+        (statusFilter === "paid" && payout.status === PAYMENT_STATUS.PAID) ||
+        (statusFilter === "pending" &&
+          payout.status === PAYMENT_STATUS.PENDING) ||
+        (statusFilter === "underReview" &&
+          payout.status === PAYMENT_STATUS.UNDER_REVIEW);
+
+      // Apply email search if provided
+      const emailMatch =
+        !emailSearch ||
+        (payout.mentorEmail &&
+          payout.mentorEmail.toLowerCase().includes(emailSearch.toLowerCase()));
+
+      return dateMatch && statusMatch && emailMatch;
     });
-  }, [payouts, payoutDateFilter]);
+  }, [payouts, payoutDateFilter, statusFilter, emailSearch, PAYMENT_STATUS]);
+
+  // Paginate payouts for current page
+  const paginatedPayouts = useMemo(() => {
+    const start = (payoutsPage - 1) * PAYOUTS_PER_PAGE;
+    return filteredPayouts.slice(start, start + PAYOUTS_PER_PAGE);
+  }, [filteredPayouts, payoutsPage]);
+  const totalPayoutPages = Math.ceil(filteredPayouts.length / PAYOUTS_PER_PAGE);
 
   // Calculate total payout amount for the filtered payouts
   const totalPayoutAmount = useMemo(() => {
@@ -1034,6 +1127,16 @@ const AdminDashboard = () => {
     }, 0);
   }, [filteredPayouts]);
 
+  // Filter pending queries based on status
+  const filteredQueries = useMemo(() => {
+    return pendingQueries.filter(
+      (query) =>
+        statusFilter === "all" ||
+        (statusFilter === "contacted" && query.status === "Contacted") ||
+        (statusFilter === "notContacted" && query.status === "Not Contacted")
+    );
+  }, [pendingQueries, statusFilter]);
+
   const handleMentorSelect = useCallback((mentor) => {
     setSelectedMentor(mentor);
     setMentorSearch("");
@@ -1041,11 +1144,17 @@ const AdminDashboard = () => {
   }, []);
 
   const clearFilters = useCallback(() => {
+    // Reset date filters based on active tab
     if (activeTab === "sessions") {
       setDateFilter({ option: "all", startDate: "", endDate: "" });
     } else if (activeTab === "payouts") {
       setPayoutDateFilter({ option: "all", startDate: "", endDate: "" });
+      setEmailSearch(""); // Clear email search for payouts
+    } else if (activeTab === "pendingQueries") {
+      setStatusFilter("all"); // Reset status filter for pending queries
     }
+
+    // Reset common filters
     setSelectedMentor(null);
     setMentorSearch("");
   }, [activeTab]);
@@ -1055,9 +1164,11 @@ const AdminDashboard = () => {
       if (activeTab === "sessions") {
         switch (status) {
           case "paid":
-            return sessions.filter((s) => s.isPaid).length;
+            return sessions.filter((s) => s.uiStatus === "paid").length;
           case "unpaid":
-            return sessions.filter((s) => !s.isPaid).length;
+            return sessions.filter((s) => s.uiStatus === "unpaid").length;
+          case "review":
+            return sessions.filter((s) => s.uiStatus === "review").length;
           default:
             return sessions.length;
         }
@@ -1069,6 +1180,10 @@ const AdminDashboard = () => {
           case "pending":
             return payouts.filter((p) => p.status === PAYMENT_STATUS.PENDING)
               .length;
+          case "underReview":
+            return payouts.filter(
+              (p) => p.status === PAYMENT_STATUS.UNDER_REVIEW
+            ).length;
           default:
             return payouts.length;
         }
@@ -1144,11 +1259,74 @@ const AdminDashboard = () => {
     }
   }, [loading, activeTab]);
 
+  // Reset payoutsPage to 1 when filters/search change
+  useEffect(() => {
+    setPayoutsPage(1);
+  }, [filteredPayouts.length]);
+
+  // Update session UI status when payouts change or sessions change
+  useEffect(() => {
+    if (sessions.length > 0) {
+      // Update sessions with payout information
+      const updatedSessions = sessions.map((session) => {
+        // Find associated payout
+        const sessionPayout = payouts.find(
+          (payout) => payout.sessionId === session.id
+        );
+
+        // Calculate UI status based on payout status first
+        let uiStatus = "unpaid"; // Default to unpaid instead of keeping existing uiStatus
+
+        // Paid status takes precedence
+        if (sessionPayout && sessionPayout.status === PAYMENT_STATUS.PAID) {
+          uiStatus = "paid";
+        } else if (session.isPaid) {
+          uiStatus = "paid";
+        } else if (
+          session.status === "review" ||
+          (sessionPayout &&
+            sessionPayout.status === PAYMENT_STATUS.UNDER_REVIEW)
+        ) {
+          uiStatus = "review";
+        }
+
+        // Only create a new object if the status changed
+        if (uiStatus !== session.uiStatus) {
+          return {
+            ...session,
+            uiStatus,
+          };
+        }
+
+        return session;
+      });
+
+      // Only update if something changed
+      const hasChanges = updatedSessions.some(
+        (session, index) => session.uiStatus !== sessions[index].uiStatus
+      );
+
+      if (hasChanges) {
+        setSessions(updatedSessions);
+      }
+    }
+  }, [payouts, sessions, PAYMENT_STATUS]);
+
   return (
     <div className="dashboard admin-dashboard fade-in">
       <div className="dashboard-header">
-        <h2>Admin Dashboard</h2>
-        <p>Manage mentor sessions, process payouts, and handle user queries</p>
+        <h2
+          className="dashboard-title"
+          style={{ color: darkMode ? "#fff" : "#2d3748" }}
+        >
+          Admin Dashboard
+        </h2>
+        <p
+          className="dashboard-subtitle"
+          style={{ color: darkMode ? "#fff" : "#718096" }}
+        >
+          Manage mentor sessions, process payouts, and handle user queries
+        </p>
       </div>
 
       {error && (
@@ -1259,6 +1437,15 @@ const AdminDashboard = () => {
                   Unpaid
                   <span className="count">{getStatusCount("unpaid")}</span>
                 </button>
+                <button
+                  className={`bookmark ${
+                    statusFilter === "review" ? "active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("review")}
+                >
+                  Under Review
+                  <span className="count">{getStatusCount("review")}</span>
+                </button>
               </>
             ) : activeTab === "payouts" ? (
               <>
@@ -1279,6 +1466,15 @@ const AdminDashboard = () => {
                 >
                   Pending
                   <span className="count">{getStatusCount("pending")}</span>
+                </button>
+                <button
+                  className={`bookmark ${
+                    statusFilter === "underReview" ? "active" : ""
+                  }`}
+                  onClick={() => setStatusFilter("underReview")}
+                >
+                  Under Review
+                  <span className="count">{getStatusCount("underReview")}</span>
                 </button>
               </>
             ) : activeTab === "pendingQueries" ? (
@@ -1409,13 +1605,97 @@ const AdminDashboard = () => {
                           </div>
                         </>
                       )}
-
-                      <button className="text" onClick={clearFilters}>
-                        Clear Filters
-                      </button>
                     </div>
                   </>
                 )}
+
+                {activeTab === "payouts" && (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="payoutEmailSearch">
+                        Search by Mentor Email
+                      </label>
+                      <input
+                        type="text"
+                        id="payoutEmailSearch"
+                        value={emailSearch}
+                        onChange={(e) => setEmailSearch(e.target.value)}
+                        placeholder="Search by mentor email..."
+                        className="search-input"
+                      />
+                    </div>
+                    <div className="date-filters">
+                      <div className="form-group">
+                        <label htmlFor="payoutDateRangeFilter">
+                          Date Range
+                        </label>
+                        <select
+                          id="payoutDateRangeFilter"
+                          className="filter-select"
+                          value={payoutDateFilter.option}
+                          onChange={(e) =>
+                            setPayoutDateFilter((prev) => ({
+                              ...prev,
+                              option: e.target.value,
+                            }))
+                          }
+                        >
+                          <option value="all">All Time</option>
+                          <option value="7days">Last 7 Days</option>
+                          <option value="15days">Last 15 Days</option>
+                          <option value="30days">Last 30 Days</option>
+                          <option value="custom">Custom Range</option>
+                        </select>
+                      </div>
+
+                      {payoutDateFilter.option === "custom" && (
+                        <div className="custom-date-range">
+                          <div className="form-group">
+                            <label htmlFor="payoutStartDate">Start Date</label>
+                            <input
+                              type="date"
+                              id="payoutStartDate"
+                              className="filter-date"
+                              value={payoutDateFilter.startDate}
+                              onChange={(e) =>
+                                setPayoutDateFilter((prev) => ({
+                                  ...prev,
+                                  startDate: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label htmlFor="payoutEndDate">End Date</label>
+                            <input
+                              type="date"
+                              id="payoutEndDate"
+                              className="filter-date"
+                              value={payoutDateFilter.endDate}
+                              onChange={(e) =>
+                                setPayoutDateFilter((prev) => ({
+                                  ...prev,
+                                  endDate: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  marginTop: "16px",
+                }}
+              >
+                <button className="clear-filters-btn" onClick={clearFilters}>
+                  Clear Filters
+                </button>
               </div>
             </div>
           )}
@@ -1434,69 +1714,35 @@ const AdminDashboard = () => {
             )}
             {activeTab === "payouts" && (
               <div className="payout-summary-section">
-                <div className="payout-filters">
-                  <div className="form-group">
-                    <label htmlFor="payoutDateRangeFilter">Date Range</label>
-                    <select
-                      id="payoutDateRangeFilter"
-                      className="filter-select"
-                      value={payoutDateFilter.option}
-                      onChange={(e) =>
-                        setPayoutDateFilter((prev) => ({
-                          ...prev,
-                          option: e.target.value,
-                        }))
-                      }
+                <PayoutList
+                  payouts={paginatedPayouts}
+                  isAdmin={true}
+                  emailSearch={emailSearch}
+                  setEmailSearch={setEmailSearch}
+                />
+                {totalPayoutPages > 1 && (
+                  <div className="pagination">
+                    <button
+                      onClick={() => setPayoutsPage((p) => Math.max(1, p - 1))}
+                      disabled={payoutsPage === 1}
+                      className="pagination-button"
                     >
-                      <option value="all">All Time</option>
-                      <option value="7days">Last 7 Days</option>
-                      <option value="15days">Last 15 Days</option>
-                      <option value="30days">Last 30 Days</option>
-                      <option value="custom">Custom Range</option>
-                    </select>
+                      Previous
+                    </button>
+                    <span className="pagination-info">
+                      Page {payoutsPage} of {totalPayoutPages}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setPayoutsPage((p) => Math.min(totalPayoutPages, p + 1))
+                      }
+                      disabled={payoutsPage === totalPayoutPages}
+                      className="pagination-button"
+                    >
+                      Next
+                    </button>
                   </div>
-
-                  {payoutDateFilter.option === "custom" && (
-                    <div className="custom-date-range">
-                      <div className="form-group">
-                        <label htmlFor="payoutStartDate">Start Date</label>
-                        <input
-                          type="date"
-                          id="payoutStartDate"
-                          className="filter-date"
-                          value={payoutDateFilter.startDate}
-                          onChange={(e) =>
-                            setPayoutDateFilter((prev) => ({
-                              ...prev,
-                              startDate: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="payoutEndDate">End Date</label>
-                        <input
-                          type="date"
-                          id="payoutEndDate"
-                          className="filter-date"
-                          value={payoutDateFilter.endDate}
-                          onChange={(e) =>
-                            setPayoutDateFilter((prev) => ({
-                              ...prev,
-                              endDate: e.target.value,
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <button className="text" onClick={clearFilters}>
-                    Clear Filters
-                  </button>
-                </div>
-
-                <PayoutList payouts={filteredPayouts} isAdmin={true} />
+                )}
               </div>
             )}
             {activeTab === "new" && <SessionForm />}
@@ -1523,43 +1769,34 @@ const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {pendingQueries
-                        .filter(
-                          (query) =>
-                            statusFilter === "all" ||
-                            (statusFilter === "contacted" &&
-                              query.status === "Contacted") ||
-                            (statusFilter === "notContacted" &&
-                              query.status === "Not Contacted")
-                        )
-                        .map((query) => (
-                          <tr key={query.id}>
-                            <td>{query.name}</td>
-                            <td>{query.email}</td>
-                            <td>{query.status}</td>
-                            <td>
-                              <button
-                                className="action-btn status-btn"
-                                onClick={() =>
-                                  handleContactStatus(query.id, query.status)
-                                }
-                              >
-                                Mark as{" "}
-                                {query.status === "Not Contacted"
-                                  ? "Contacted"
-                                  : "Not Contacted"}
-                              </button>
-                              <a
-                                href={`https://mail.google.com/mail/?view=cm&to=${query.email}&su=Support%20Request%20-%20masaipe`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="action-btn email-btn"
-                              >
-                                Email User
-                              </a>
-                            </td>
-                          </tr>
-                        ))}
+                      {filteredQueries.map((query) => (
+                        <tr key={query.id}>
+                          <td>{query.name}</td>
+                          <td>{query.email}</td>
+                          <td>{query.status}</td>
+                          <td>
+                            <button
+                              className="action-btn status-btn"
+                              onClick={() =>
+                                handleContactStatus(query.id, query.status)
+                              }
+                            >
+                              Mark as{" "}
+                              {query.status === "Not Contacted"
+                                ? "Contacted"
+                                : "Not Contacted"}
+                            </button>
+                            <a
+                              href={`https://mail.google.com/mail/?view=cm&to=${query.email}&su=Support%20Request%20-%20masaipe`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="action-btn email-btn"
+                            >
+                              Email User
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 )}

@@ -4,6 +4,9 @@
 
 .session-section {
   margin-bottom: var(--space-xl);
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .session-section h3 {
@@ -123,8 +126,10 @@
 /* Mobile carousel styles */
 @media (max-width: 768px) {
   .sessions-grid {
-    display: flex;
-    overflow-x: auto;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     gap: var(--space-md);
@@ -132,15 +137,20 @@
     margin: 0 -1rem;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    white-space: nowrap;
+    width: 100%;
+    max-width: 100vw;
   }
-
   .sessions-grid::-webkit-scrollbar {
     display: none;
   }
-
   .session-card {
-    flex: 0 0 calc(100% - var(--space-md));
-    min-width: 280px;
+    flex: 0 0 75vw;
+    min-width: 200px;
+    max-width: 80vw;
+    padding: 12px 10px;
+    min-height: 220px;
+    font-size: 14px;
   }
 
   /* Show carousel buttons on mobile */
@@ -181,7 +191,16 @@
 /* Tablet view - 2 columns */
 @media (min-width: 769px) and (max-width: 1024px) {
   .sessions-grid {
-    grid-template-columns: repeat(2, 1fr);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(340px, 1fr));
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    margin: 0;
+    overflow-x: auto;
+  }
+  .session-card {
+    min-width: 340px;
+    max-width: 100%;
   }
 }
 
@@ -402,7 +421,6 @@
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-xs);
   font-weight: 500;
-  margin-bottom: 12px;
 }
 
 .status-badge.paid {
@@ -705,26 +723,57 @@
 
 @media (max-width: 768px) {
   .sessions-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-sm);
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    margin: 0 -1rem;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    white-space: nowrap;
+    width: 100%;
+    max-width: 100vw;
   }
-
+  .sessions-grid::-webkit-scrollbar {
+    display: none;
+  }
   .session-card {
-    min-height: 300px;
-    padding: var(--space-md);
+    flex: 0 0 75vw;
+    min-width: 200px;
+    max-width: 80vw;
+    padding: 12px 10px;
+    min-height: 220px;
+    font-size: 14px;
   }
-
   .scrollable-sessions {
     margin: 0 10px;
   }
-
   .session-section h3 {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
-
   .payout-button {
     padding: 8px 12px;
     font-size: 14px;
+  }
+  .session-paid-badge,
+  .session-review-badge {
+    position: static;
+    display: inline-block;
+    margin-bottom: 8px;
+    margin-right: 8px;
+    top: unset;
+    right: unset;
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+  .session-details {
+    margin-top: 20px !important;
+    font-size: 13px;
+    gap: 4px;
   }
 }
 
@@ -733,35 +782,37 @@
     min-height: 280px;
     padding: 12px;
   }
-
   .session-details {
-    margin: var(--space-md) 0;
+    margin-top: 8px;
     font-size: 13px;
+    gap: 4px;
   }
-
   .detail-row {
     margin-bottom: 6px;
   }
-
   .session-actions {
     gap: 8px;
   }
-
   .session-action-buttons {
     flex-wrap: wrap;
     justify-content: center;
     gap: 8px;
   }
-
   .payout-button {
     width: 100%;
     padding: 6px 10px;
     font-size: 13px;
   }
-
   .symbol-button {
     width: 28px;
     height: 28px;
+  }
+  .session-paid-badge,
+  .session-review-badge {
+    font-size: 10px;
+    padding: 1px 6px;
+    margin-bottom: 6px;
+    margin-right: 6px;
   }
 }
 
@@ -1044,6 +1095,9 @@ body.modal-open {
 
 .sessions-section {
   margin-bottom: var(--space-xl);
+  overflow: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .sessions-section h3 {
@@ -1059,14 +1113,12 @@ body.modal-open {
 
 /* Dark mode support for the pagination controls */
 [data-theme="dark"] .pagination-arrow {
-  background-color: var(--color-surface-dark, #2d3748);
-  border-color: var(--color-border-dark, #4a5568);
-  color: var(--color-text-primary-dark, #e2e8f0);
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-border-dark);
 }
 
 [data-theme="dark"] .pagination-arrow:hover:not(:disabled) {
-  background-color: var(--color-primary);
-  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
   border-color: var(--color-primary);
 }
 
@@ -1552,4 +1604,42 @@ body.modal-open {
 /* CSV Uploader Styles */
 .csv-uploader {
   margin-bottom: var(--space-xl);
+}
+
+/* Add these styles to hide scrollbars for session-section and sessions-section */
+.session-section::-webkit-scrollbar,
+.sessions-section::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
+/* Comprehensive scrollbar hiding for mobile */
+@media (max-width: 768px) {
+  .session-section,
+  .sessions-section,
+  .scrollable-sessions,
+  .scrollable-sessions-container,
+  .sessions-grid,
+  .responsive-session-grid,
+  .scrollable-outer-container,
+  .session-list,
+  [class*="session"] [class*="scroll"],
+  [class*="scroll"] {
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* IE/Edge */
+  }
+
+  .session-section::-webkit-scrollbar,
+  .sessions-section::-webkit-scrollbar,
+  .scrollable-sessions::-webkit-scrollbar,
+  .scrollable-sessions-container::-webkit-scrollbar,
+  .sessions-grid::-webkit-scrollbar,
+  .responsive-session-grid::-webkit-scrollbar,
+  .scrollable-outer-container::-webkit-scrollbar,
+  .session-list::-webkit-scrollbar,
+  [class*="session"] [class*="scroll"]::-webkit-scrollbar,
+  [class*="scroll"]::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important; /* Chrome/Safari/Opera */
+  }
 }

@@ -233,7 +233,7 @@
 
 .user-popup {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 30px);
   right: 0;
   background-color: var(--color-card);
   border-radius: var(--border-radius-md);
@@ -242,7 +242,10 @@
   min-width: 220px;
   z-index: 1000;
   border: 1px solid var(--color-border);
+  animation: slideDown 0.3s ease-out;
 }
+
+
 
 [data-theme="dark"] .user-popup {
   background-color: var(--color-surface);
@@ -358,4 +361,16 @@
 }
 [data-theme="dark"] .registered {
   color: #fff;
+}
+
+/* Add keyframes for animation */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

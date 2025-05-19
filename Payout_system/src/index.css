@@ -62,11 +62,14 @@
   --color-primary-dark: #cc0000;
 
   --color-bg: #121212;
+  --color-bg-dark: #121212;
   --color-surface: #1e1e1e;
   --color-card: #2a2a2a;
   --color-border: #333333;
+  --color-border-dark: #333333;
 
   --color-text-primary: #ffffff;
+  --color-text-primary-dark: #ffffff;
   --color-text-secondary: #cccccc;
   --color-text-tertiary: #999999;
   --color-text-on-primary: #ffffff;
@@ -395,4 +398,22 @@ select:disabled {
 [data-theme="dark"] select:disabled {
   background-color: #2a2a2a;
   color: #666666;
+}
+
+/* Fix autofill styles for dark mode */
+.dark-mode input:-webkit-autofill,
+.dark-mode input:-webkit-autofill:hover,
+.dark-mode input:-webkit-autofill:focus,
+.dark-mode input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #121212 inset !important;
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Fix autocomplete dropdown in dark mode */
+.dark-mode input:-webkit-autofill + div,
+.dark-mode input:-webkit-autofill:focus + div {
+  background-color: #121212 !important;
+  color: #ffffff !important;
 }

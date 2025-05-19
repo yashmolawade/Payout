@@ -98,6 +98,7 @@ const SessionForm = () => {
         isPaid: false,
         status: "pending", // Add status field
         isAttended: false, // Initialize isAttended as false
+        uiStatus: "unpaid", // Add uiStatus field to ensure it appears in the correct tab
       };
 
       // Save the session to Firestore
@@ -139,7 +140,7 @@ const SessionForm = () => {
   return (
     <div className="session-forms-container">
       <CsvSessionUploader />
-      
+
       <div className="session-form-container">
         <h3>Add New Session</h3>
 

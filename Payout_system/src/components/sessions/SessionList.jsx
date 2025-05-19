@@ -27,20 +27,20 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const scrollCarousel = (direction, gridKey) => {
     if (!isMobile) return;
-    
+
     const container = sessionsGridRefs.current[gridKey];
     if (!container) return;
 
-    const scrollAmount = direction === 'prev' ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
+    const scrollAmount = direction === "prev" ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
     container.scrollBy({
       left: scrollAmount,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
@@ -49,29 +49,9 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
 
     return (
       <div className="relative">
-        {isMobile && (
-          <>
-            <button
-              className="carousel-button prev"
-              onClick={() => scrollCarousel('prev', gridKey)}
-              aria-label="Previous"
-            >
-              <MdChevronLeft size={24} />
-            </button>
-            
-            <button
-              className="carousel-button next"
-              onClick={() => scrollCarousel('next', gridKey)}
-              aria-label="Next"
-            >
-              <MdChevronRight size={24} />
-            </button>
-          </>
-        )}
-        
-        <div 
+        <div
           className="sessions-grid"
-          ref={el => sessionsGridRefs.current[gridKey] = el}
+          ref={(el) => (sessionsGridRefs.current[gridKey] = el)}
         >
           {sessions.map((session) => (
             <SessionCard
@@ -105,37 +85,15 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
   );
 
   // Group sessions by status and payment
-  const unpaidSessions = sortedSessions.filter((session) => {
-    const sessionPayout = payouts?.find(
-      (payout) => payout.sessionId === session.id
-    );
-    const payoutStatus = sessionPayout?.status || "unpaid";
-    return (
-      payoutStatus === "unpaid" &&
-      session.status !== "review" &&
-      !session.isAttended
-    );
-  });
-
-  const underReviewSessions = sortedSessions.filter((session) => {
-    const sessionPayout = payouts?.find(
-      (payout) => payout.sessionId === session.id
-    );
-    const payoutStatus = sessionPayout?.status || "unpaid";
-    return (
-      session.status === "review" ||
-      session.isAttended ||
-      payoutStatus === "underReview"
-    );
-  });
-
-  const paidSessions = sortedSessions.filter((session) => {
-    const sessionPayout = payouts?.find(
-      (payout) => payout.sessionId === session.id
-    );
-    const payoutStatus = sessionPayout?.status || "unpaid";
-    return payoutStatus === "paid";
-  });
+  const unpaidSessions = sortedSessions.filter(
+    (session) => session.uiStatus === "unpaid"
+  );
+  const underReviewSessions = sortedSessions.filter(
+    (session) => session.uiStatus === "review"
+  );
+  const paidSessions = sortedSessions.filter(
+    (session) => session.uiStatus === "paid"
+  );
 
   // Calculate pagination for unpaid sessions
   const unpaidTotalPages = Math.ceil(unpaidSessions.length / ITEMS_PER_PAGE);
@@ -212,7 +170,7 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
                 Unpaid Sessions{" "}
                 <span className="count">({unpaidSessions.length})</span>
               </h3>
-              {renderSessionGrid(unpaidSessionsToShow, 'unpaid')}
+              {renderSessionGrid(unpaidSessionsToShow, "unpaid")}
               {!isMobile && (
                 <PaginationControls
                   currentPage={unpaidPage}
@@ -230,7 +188,7 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
                 Under Review{" "}
                 <span className="count">({underReviewSessions.length})</span>
               </h3>
-              {renderSessionGrid(reviewSessionsToShow, 'review')}
+              {renderSessionGrid(reviewSessionsToShow, "review")}
               {!isMobile && (
                 <PaginationControls
                   currentPage={reviewPage}
@@ -248,7 +206,7 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
                 Paid Sessions{" "}
                 <span className="count">({paidSessions.length})</span>
               </h3>
-              {renderSessionGrid(paidSessionsToShow, 'paid')}
+              {renderSessionGrid(paidSessionsToShow, "paid")}
               {!isMobile && (
                 <PaginationControls
                   currentPage={paidPage}
@@ -265,7 +223,10 @@ const SessionList = ({ sessions, isAdmin, payouts }) => {
           <h3>
             Your Sessions <span className="count">({sessions.length})</span>
           </h3>
-          {renderSessionGrid(mentorSessionsToShow, 'mentor')}
+          {renderSessionGrid(
+            isMobile ? sortedSessions : mentorSessionsToShow,
+            "mentor"
+          )}
           {!isMobile && (
             <PaginationControls
               currentPage={mentorPage}

@@ -141,6 +141,24 @@
   color: var(--color-text-primary-dark);
 }
 
+/* Fix for autofill background in dark mode */
+[data-theme="dark"] .form-group input:-webkit-autofill,
+[data-theme="dark"] .form-group input:-webkit-autofill:hover,
+[data-theme="dark"] .form-group input:-webkit-autofill:focus,
+[data-theme="dark"] .form-group input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px #000 inset !important;
+  -webkit-text-fill-color: var(--color-text-primary-dark) !important;
+  transition: background-color 5000s ease-in-out 0s;
+  background-color: #000 !important;
+  caret-color: var(--color-text-primary-dark) !important;
+}
+
+/* Fix for Firefox autofill */
+[data-theme="dark"] .form-group input:autofill {
+  background-color: #000 !important;
+  color: var(--color-text-primary-dark) !important;
+}
+
 [data-theme="dark"] .form-group input.error,
 [data-theme="dark"] .form-group select.error {
   border-color: #e74c3c;

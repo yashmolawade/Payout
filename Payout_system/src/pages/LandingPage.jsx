@@ -10,6 +10,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import ChatAssistant from "../components/ChatAssistant"; // Import the Chat Assistant
 import { AnimatedText } from "../components/animations/AnimatedText";
+import Footer from "../components/common/Footer";
 
 const LandingPage = () => {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -336,6 +337,7 @@ const LandingPage = () => {
           </p>
         </div>
       </footer>
+      <Footer />
 
       {/* Chat Assistant */}
       <div className="chat-assistant">

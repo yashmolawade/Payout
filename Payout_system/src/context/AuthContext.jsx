@@ -31,34 +31,74 @@ export const AuthProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
-  // Track if this is a direct login (not a refresh or restoration)
   const [isDirectLogin, setIsDirectLogin] = useState(false);
 
-  const fetchUserData = useCallback(async (user) => {
-    if (!user) {
-      setUserData(null);
-      return;
+  const handleAuthError = useCallback((error, context) => {
+    let errorMessage = "An error occurred. Please try again.";
+
+    if (error.code) {
+      switch (error.code) {
+        case "auth/invalid-email":
+          errorMessage = "Invalid email address.";
+          break;
+        case "auth/user-disabled":
+          errorMessage = "This account has been disabled.";
+          break;
+        case "auth/user-not-found":
+          errorMessage = "No account found with this email.";
+          break;
+        case "auth/wrong-password":
+          errorMessage = "Incorrect password.";
+          break;
+        case "auth/email-already-in-use":
+          errorMessage = "This email is already registered.";
+          break;
+        case "auth/weak-password":
+          errorMessage = "Password is too weak.";
+          break;
+        case "auth/operation-not-allowed":
+          errorMessage = "This operation is not allowed.";
+          break;
+        case "auth/network-request-failed":
+          errorMessage = "Network error. Please check your connection.";
+          break;
+        default:
+          errorMessage = error.message || "Authentication failed.";
+      }
     }
 
-    try {
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      if (userDoc.exists()) {
-        setUserData(userDoc.data());
-      } else {
-        // Create new user document if it doesn't exist
-        const newUserData = {
-          email: user.email,
-          role: "user",
-          createdAt: new Date().toISOString(),
-          darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
-        };
-        await setDoc(doc(db, "users", user.uid), newUserData);
-        setUserData(newUserData);
-      }
-    } catch (error) {
-      setUserData(null);
-    }
+    setAuthError(`${context}: ${errorMessage}`);
+    setLoading(false);
   }, []);
+
+  const fetchUserData = useCallback(
+    async (user) => {
+      if (!user) {
+        setUserData(null);
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setUserData(userDoc.data());
+        } else {
+          const newUserData = {
+            email: user.email,
+            role: "user",
+            createdAt: new Date().toISOString(),
+            darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
+          };
+          await setDoc(doc(db, "users", user.uid), newUserData);
+          setUserData(newUserData);
+        }
+      } catch (error) {
+        handleAuthError(error, "Error fetching user data");
+        setUserData(null);
+      }
+    },
+    [handleAuthError]
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -75,66 +115,66 @@ export const AuthProvider = ({ children }) => {
       try {
         setLoading(true);
         setAuthError(null);
-        // Set the direct login flag to indicate this is a real login, not a page refresh
         setIsDirectLogin(true);
+
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
           password
         );
         await fetchUserData(userCredential.user);
-        // Log the login event to audit trail - this is a real login with email/password
+
         await logUserLogin({
           uid: userCredential.user.uid,
           email: userCredential.user.email,
           role: userData?.role || "user",
         });
+
         return userCredential.user;
       } catch (error) {
-        console.error("Login error:", error);
-        setAuthError("Invalid email or password");
-        setLoading(false);
+        handleAuthError(error, "Login failed");
         throw error;
       } finally {
-        // Reset the direct login flag
         setIsDirectLogin(false);
       }
     },
-    [fetchUserData, userData]
+    [fetchUserData, userData, handleAuthError]
   );
 
-  const register = useCallback(async (email, password, role, name) => {
-    try {
-      setLoading(true);
-      setAuthError(null);
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const newUserData = {
-        email: userCredential.user.email,
-        name: name,
-        role: role,
-        createdAt: new Date().toISOString(),
-        darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
-      };
-      await setDoc(doc(db, "users", userCredential.user.uid), newUserData);
-      setUserData(newUserData);
-      return userCredential.user;
-    } catch (error) {
-      console.error("Registration error:", error);
-      setAuthError("Failed to register account");
-      setLoading(false);
-      throw error;
-    }
-  }, []);
+  const register = useCallback(
+    async (email, password, role, name) => {
+      try {
+        setLoading(true);
+        setAuthError(null);
+
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const newUserData = {
+          email: userCredential.user.email,
+          name: name,
+          role: role,
+          createdAt: new Date().toISOString(),
+          darkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
+        };
+
+        await setDoc(doc(db, "users", userCredential.user.uid), newUserData);
+        setUserData(newUserData);
+
+        return userCredential.user;
+      } catch (error) {
+        handleAuthError(error, "Registration failed");
+        throw error;
+      }
+    },
+    [handleAuthError]
+  );
 
   const logout = useCallback(async () => {
     try {
-      // Log the logout event to audit trail before signing out
       if (currentUser && userData) {
-        // Only use the new logging method to avoid duplication
         await logUserLogout({
           uid: currentUser.uid,
           email: currentUser.email,
@@ -146,12 +186,10 @@ export const AuthProvider = ({ children }) => {
       await signOut(auth);
       setUserData(null);
     } catch (error) {
-      console.error("Logout error:", error);
-      setAuthError("Failed to log out");
-      setLoading(false);
+      handleAuthError(error, "Logout failed");
       throw error;
     }
-  }, [currentUser, userData]);
+  }, [currentUser, userData, handleAuthError]);
 
   const updateUserData = useCallback(
     async (updates) => {
@@ -162,11 +200,11 @@ export const AuthProvider = ({ children }) => {
         await updateDoc(userRef, updates);
         setUserData((prev) => ({ ...prev, ...updates }));
       } catch (error) {
-        console.error("Error updating user data:", error);
+        handleAuthError(error, "Error updating user data");
         throw error;
       }
     },
-    [currentUser]
+    [currentUser, handleAuthError]
   );
 
   const value = useMemo(

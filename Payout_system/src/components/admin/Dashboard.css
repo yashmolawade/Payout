@@ -380,4 +380,6 @@ button.text {
 
 [data-theme="dark"] .audit-logs-table tr:hover {
   background-color: rgba(255, 255, 255, 0.03);
-} 
+}
+
+/* Any additional styles below */

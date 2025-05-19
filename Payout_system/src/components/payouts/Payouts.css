@@ -30,12 +30,18 @@
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.payout-table th.actions {
+  text-align: left;
 }
 
 .payout-table td {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   padding: var(--space-md);
+  text-align: center;
 }
 
 .payout-table td.amount {
@@ -503,4 +509,16 @@
 
 .action-btn.approve:hover {
   background-color: #388e3c;
+}
+
+/* Styles for the new 'Yourself' column */
+.payout-table td.yourself-actions {
+  /* Removing styles */
+  display: none;
+}
+
+.payout-table td.yourself-actions .action-btn {
+  /* Removing styles */
+  min-width: auto;
+  white-space: normal;
 }
