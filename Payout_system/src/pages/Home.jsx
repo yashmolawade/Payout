@@ -4,17 +4,20 @@ import { useAuth } from "../context/AuthContext";
 import Layout from "../components/layout/Layout";
 import AdminDashboard from "../components/dashboard/AdminDashboard";
 import MentorDashboard from "../components/dashboard/MentorDashboard";
-import Loader3D from "../components/common/Loader3D";
+import { useLoading } from "../contexts/LoadingContext";
 
 const Home = () => {
   const { userData, loading } = useAuth();
+  const { showLoader, hideLoader } = useLoading();
 
   useEffect(() => {
-    document.title = "masaipay - dashboard";
+    document.title = "masaipe - dashboard";
+    showLoader("Loading Dashboard...");
+    return () => hideLoader();
   }, []);
 
   if (loading) {
-    return <Loader3D text="Loading Dashboard..." />;
+    return null;
   }
 
   if (!userData) {

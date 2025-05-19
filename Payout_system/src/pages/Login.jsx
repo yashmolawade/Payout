@@ -3,22 +3,37 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Layout from "../components/layout/Layout";
 import AuthForm from "../components/auth/AuthForm";
-import Loader3D from "../components/common/Loader3D";
+import { useLoading } from "../contexts/LoadingContext";
 
 const Login = () => {
   const { currentUser, loading } = useAuth();
   const [showLoader, setShowLoader] = useState(false);
+  const { showLoader: showLoading, hideLoader } = useLoading();
 
   useEffect(() => {
     // Only set the document title, no more test logs
-    document.title = "masaipay - login";
+    document.title = "masaipe - login";
   }, []);
+
+  useEffect(() => {
+    if (loading) {
+      showLoading("Loading login...");
+    } else {
+      hideLoader();
+    }
+  }, [loading, showLoading, hideLoader]);
+
+  // Hide loader on successful login (redirect)
+  useEffect(() => {
+    if (currentUser) {
+      hideLoader();
+    }
+  }, [currentUser, hideLoader]);
 
   // Add artificial delay after login is successful
   useEffect(() => {
     if (currentUser && !showLoader) {
       setShowLoader(true);
-      // This timeout will keep showing the loader for 3 seconds
       setTimeout(() => {
         setShowLoader(false);
       }, 3000);
@@ -26,12 +41,11 @@ const Login = () => {
   }, [currentUser]);
 
   if (loading) {
-    return <Loader3D text="Loading login..." />;
+    return null;
   }
 
-  // Show loader for 3 seconds after successful login
   if (showLoader) {
-    return <Loader3D text="Preparing your dashboard..." />;
+    return null;
   }
 
   if (currentUser) {

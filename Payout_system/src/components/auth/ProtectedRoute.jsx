@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import Loader3D from "../common/Loader3D";
+import { useLoading } from "../../contexts/LoadingContext";
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { currentUser, userData, loading } = useAuth();
   const location = useLocation();
+  const { showLoader, hideLoader } = useLoading();
 
-  if (loading) {
-    return <Loader3D text="Authenticating..." />;
-  }
+  useEffect(() => {
+    showLoader("Authenticating...");
+    return () => hideLoader();
+  }, []);
 
   if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;

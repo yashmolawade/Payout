@@ -138,7 +138,7 @@ const ChatAssistant = () => {
           ...prev,
           {
             sender: "bot",
-            text: 'MasaiPay is a payout automation system designed for EdTech platforms. Learn more in the <a href="#about">About section</a>. Anything else I can help with?',
+            text: 'MasaiPE is a payout automation system designed for EdTech platforms. Learn more in the <a href="#about">About section</a>. Anything else I can help with?',
           },
         ]);
         setShowAssistanceButtons(false);
@@ -147,7 +147,7 @@ const ChatAssistant = () => {
           ...prev,
           {
             sender: "bot",
-            text: 'You can reach us at <a href="mailto:support@masaipay.com">support@masaipay.com</a>. Check the <a href="#contact">Contact section</a> for more details. Need further assistance?',
+            text: 'You can reach us at <a href="mailto:support@masaipe.com">support@masaipe.com</a>. Check the <a href="#contact">Contact section</a> for more details. Need further assistance?',
           },
         ]);
         setShowAssistanceButtons(true);

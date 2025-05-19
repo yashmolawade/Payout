@@ -317,7 +317,7 @@ const LandingPage = () => {
           <h2>Contact Us</h2>
           <p>
             Have questions or need support? Reach out to us at{" "}
-            <a href="mailto:support@masaipay.com">support@masaipay.com</a>.
+            <a href="mailto:support@masaipe.com">support@masaipe.com</a>.
           </p>
         </div>
       </section>

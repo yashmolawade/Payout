@@ -23,7 +23,7 @@ const firebaseConfig = {
   messagingSenderId: "743805068795",
   appId: "1:743805068795:web:187baed199b89e1883975e",
   measurementId: "G-VP50RXPF6Q",
-  databaseURL: "https://payout-2-default-rtdb.firebaseio.com/",
+  databaseURL: "https://payout-2-default-rtdb.asia-southeast1.firebasedatabase.app/",
 };
 
 // Prevent multiple initializations in dev mode / hot reloads

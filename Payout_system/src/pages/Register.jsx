@@ -3,18 +3,29 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Layout from "../components/layout/Layout";
 import AuthForm from "../components/auth/AuthForm";
-import Loader3D from "../components/common/Loader3D";
+import { useLoading } from "../contexts/LoadingContext";
 
 const Register = () => {
   const { currentUser, loading } = useAuth();
+  const { showLoader, hideLoader } = useLoading();
 
   useEffect(() => {
-    // Update document title
-    document.title = "masaipay - register";
-  }, []);
+    if (loading) {
+      showLoader("Loading registration...");
+    } else {
+      hideLoader();
+    }
+  }, [loading, showLoader, hideLoader]);
+
+  // Hide loader on successful register (redirect)
+  useEffect(() => {
+    if (currentUser) {
+      hideLoader();
+    }
+  }, [currentUser, hideLoader]);
 
   if (loading) {
-    return <Loader3D text="Loading registration..." />;
+    return null;
   }
 
   if (currentUser) {

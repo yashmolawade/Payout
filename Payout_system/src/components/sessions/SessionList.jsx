@@ -7,14 +7,7 @@ import "./Sessions.css";
 const ITEMS_PER_PAGE = 6;
 const SCROLL_AMOUNT = 280; // Width of one card
 
-const SessionList = ({
-  sessions,
-  isAdmin,
-  payouts,
-  scrollable = false,
-  containerClass = "",
-  hideScrollButtons = false,
-}) => {
+const SessionList = ({ sessions, isAdmin, payouts }) => {
   const { currentUser } = useAuth();
   const [unpaidPage, setUnpaidPage] = useState(1);
   const [paidPage, setPaidPage] = useState(1);
@@ -34,91 +27,51 @@ const SessionList = ({
       setIsMobile(window.innerWidth <= 768);
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const scrollCarousel = (direction, gridKey) => {
+    if (!isMobile) return;
+    
     const container = sessionsGridRefs.current[gridKey];
     if (!container) return;
 
-    const scrollAmount = direction === "prev" ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
+    const scrollAmount = direction === 'prev' ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
     container.scrollBy({
       left: scrollAmount,
-      behavior: "smooth",
+      behavior: 'smooth'
     });
   };
 
   const renderSessionGrid = (sessions, gridKey) => {
     if (!sessions.length) return null;
 
-    if (scrollable) {
-      return (
-        <div className="scrollable-outer-container">
-          {!hideScrollButtons && (
-            <>
-              <button
-                className="scroll-button left"
-                onClick={() => scrollCarousel("prev", gridKey)}
-                aria-label="Previous"
-              >
-                <MdChevronLeft size={24} />
-              </button>
-
-              <button
-                className="scroll-button right"
-                onClick={() => scrollCarousel("next", gridKey)}
-                aria-label="Next"
-              >
-                <MdChevronRight size={24} />
-              </button>
-            </>
-          )}
-
-          <div className="scrollable-sessions-container">
-            <div
-              className={`scrollable-sessions-grid ${containerClass}`}
-              ref={(el) => (sessionsGridRefs.current[gridKey] = el)}
-            >
-              {sessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  isAdmin={isAdmin}
-                  payouts={payouts}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
     return (
       <div className="relative">
-        {isMobile && !hideScrollButtons && (
+        {isMobile && (
           <>
             <button
               className="carousel-button prev"
-              onClick={() => scrollCarousel("prev", gridKey)}
+              onClick={() => scrollCarousel('prev', gridKey)}
               aria-label="Previous"
             >
               <MdChevronLeft size={24} />
             </button>
-
+            
             <button
               className="carousel-button next"
-              onClick={() => scrollCarousel("next", gridKey)}
+              onClick={() => scrollCarousel('next', gridKey)}
               aria-label="Next"
             >
               <MdChevronRight size={24} />
             </button>
           </>
         )}
-
-        <div
-          className={`sessions-grid ${containerClass}`}
-          ref={(el) => (sessionsGridRefs.current[gridKey] = el)}
+        
+        <div 
+          className="sessions-grid"
+          ref={el => sessionsGridRefs.current[gridKey] = el}
         >
           {sessions.map((session) => (
             <SessionCard
@@ -259,7 +212,7 @@ const SessionList = ({
                 Unpaid Sessions{" "}
                 <span className="count">({unpaidSessions.length})</span>
               </h3>
-              {renderSessionGrid(unpaidSessionsToShow, "unpaid")}
+              {renderSessionGrid(unpaidSessionsToShow, 'unpaid')}
               {!isMobile && (
                 <PaginationControls
                   currentPage={unpaidPage}
@@ -277,7 +230,7 @@ const SessionList = ({
                 Under Review{" "}
                 <span className="count">({underReviewSessions.length})</span>
               </h3>
-              {renderSessionGrid(reviewSessionsToShow, "review")}
+              {renderSessionGrid(reviewSessionsToShow, 'review')}
               {!isMobile && (
                 <PaginationControls
                   currentPage={reviewPage}
@@ -295,7 +248,7 @@ const SessionList = ({
                 Paid Sessions{" "}
                 <span className="count">({paidSessions.length})</span>
               </h3>
-              {renderSessionGrid(paidSessionsToShow, "paid")}
+              {renderSessionGrid(paidSessionsToShow, 'paid')}
               {!isMobile && (
                 <PaginationControls
                   currentPage={paidPage}
@@ -312,7 +265,7 @@ const SessionList = ({
           <h3>
             Your Sessions <span className="count">({sessions.length})</span>
           </h3>
-          {renderSessionGrid(mentorSessionsToShow, "mentor")}
+          {renderSessionGrid(mentorSessionsToShow, 'mentor')}
           {!isMobile && (
             <PaginationControls
               currentPage={mentorPage}

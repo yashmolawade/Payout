@@ -1,50 +1,42 @@
-import React from "react";
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
+import React from 'react';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 
 // Create styles
 const styles = StyleSheet.create({
   page: {
-    flexDirection: "column",
-    backgroundColor: "#FFFFFF",
+    flexDirection: 'column',
+    backgroundColor: '#FFFFFF',
     padding: 30,
   },
   header: {
     marginBottom: 20,
     borderBottom: 1,
-    borderBottomColor: "#999",
+    borderBottomColor: '#999',
     paddingBottom: 10,
   },
   logo: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 10,
   },
   logoMasa: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-    marginRight: 1,
+    fontWeight: 'bold',
+    color: '#FF3333',
   },
   logoI: {
     fontSize: 24,
-    fontWeight: "bold",
-    background: "linear-gradient(45deg, #FF3366, #FF6B3D)",
-    color: "#FF3366",
-    marginLeft: 1,
-    marginRight: 1,
+    fontWeight: 'bold',
+    color: '#FF3333',
   },
-  logoPay: {
+  logoPe: {
     fontSize: 24,
-    fontWeight: "bold",
-    color: "#000000",
-  },
-  registered: {
-    fontSize: 10,
-    verticalAlign: "super",
+    fontWeight: 'bold',
+    color: '#000000',
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 10,
   },
   section: {
@@ -52,31 +44,31 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginVertical: 5,
   },
   label: {
     fontSize: 12,
-    color: "#666",
+    color: '#666',
   },
   value: {
     fontSize: 12,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   total: {
     marginTop: 20,
     paddingTop: 10,
     borderTop: 1,
-    borderTopColor: "#999",
+    borderTopColor: '#999',
   },
   footer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 30,
     left: 30,
     right: 30,
-    textAlign: "center",
-    color: "#666",
+    textAlign: 'center',
+    color: '#666',
     fontSize: 10,
   },
 });
@@ -93,16 +85,13 @@ const PayoutPDF = ({ session, payoutDetails }) => {
           <View style={styles.logo}>
             <Text style={styles.logoMasa}>masa</Text>
             <Text style={styles.logoI}>i</Text>
-            <Text style={styles.logoPay}>pay</Text>
-            <Text style={styles.registered}>®</Text>
+            <Text style={styles.logoPe}>pe</Text>
           </View>
           <Text>Generated on: {formatDate(Date.now())}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={{ fontSize: 16, marginBottom: 10 }}>
-            Session Information
-          </Text>
+          <Text style={{ fontSize: 16, marginBottom: 10 }}>Session Information</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Mentor Email:</Text>
             <Text style={styles.value}>{session.mentorEmail}</Text>
@@ -126,14 +115,10 @@ const PayoutPDF = ({ session, payoutDetails }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={{ fontSize: 16, marginBottom: 10 }}>
-            Payment Breakdown
-          </Text>
+          <Text style={{ fontSize: 16, marginBottom: 10 }}>Payment Breakdown</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Gross Amount:</Text>
-            <Text style={styles.value}>
-              ${payoutDetails.grossAmount.toFixed(2)}
-            </Text>
+            <Text style={styles.value}>${payoutDetails.grossAmount.toFixed(2)}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>GST (8.75%):</Text>
@@ -145,27 +130,21 @@ const PayoutPDF = ({ session, payoutDetails }) => {
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Platform Fee (5%):</Text>
-            <Text style={styles.value}>
-              -${payoutDetails.platformFee.toFixed(2)}
-            </Text>
+            <Text style={styles.value}>-${payoutDetails.platformFee.toFixed(2)}</Text>
           </View>
           <View style={[styles.row, styles.total]}>
-            <Text style={[styles.label, { fontSize: 14 }]}>
-              Net Payable Amount:
-            </Text>
-            <Text style={[styles.value, { fontSize: 14 }]}>
-              ${payoutDetails.netAmount.toFixed(2)}
-            </Text>
+            <Text style={[styles.label, { fontSize: 14 }]}>Net Payable Amount:</Text>
+            <Text style={[styles.value, { fontSize: 14 }]}>${payoutDetails.netAmount.toFixed(2)}</Text>
           </View>
         </View>
 
         <View style={styles.footer}>
           <Text>This is an automatically generated payout document.</Text>
-          <Text>masaipay © {new Date().getFullYear()}</Text>
+          <Text>masaipe © {new Date().getFullYear()}</Text>
         </View>
       </Page>
     </Document>
   );
 };
 
-export default PayoutPDF;
+export default PayoutPDF; 

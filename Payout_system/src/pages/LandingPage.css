@@ -58,7 +58,7 @@
   align-items: center;
 }
 
-/* MasaiPay Logo Styling */
+/* MasaiPE Logo Styling */
 .landing-header .logo .masai-part,
 .landing-header .logo .pay-part {
   color: var(--color-text-primary);
@@ -474,16 +474,16 @@
     min-height: 60vh;
     padding: var(--space-lg) var(--space-md);
   }
-  
+
   .hero-content {
     padding: 0;
   }
-  
+
   .hero-content h1 {
     font-size: 2rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .hero-content p {
     font-size: 1.125rem;
   }

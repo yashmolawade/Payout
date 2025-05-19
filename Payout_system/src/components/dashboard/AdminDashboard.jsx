@@ -22,7 +22,7 @@ import ChatSection from "../chat/ChatSection";
 import { PAYMENT_STATUS } from "../../types/index";
 import "./Dashboard.css";
 import { createActivityLog } from "../../utils/auditTracker";
-import Loader3D from "../common/Loader3D";
+import { useLoading } from "../../contexts/LoadingContext";
 
 const formatPayoutChanges = (beforeData, afterData) => {
   const changes = [];
@@ -72,16 +72,33 @@ const AuditLogsList = ({ searchTerm = "", actionType = "all" }) => {
       const auditLogsRef = collection(db, "audit_logs");
       let auditLogsQuery;
 
-      if (actionType !== "all") {
-        // Check for both old and new schemas
+      if (actionType !== "all" && searchTerm) {
+        auditLogsQuery = query(
+          auditLogsRef,
+          where("actionType", "==", actionType),
+          where("userEmail", ">=", searchTerm),
+          where("userEmail", "<=", searchTerm + "\uf8ff"),
+          orderBy("userEmail"),
+          orderBy("timestamp", "desc"),
+          limit(LOGS_PER_PAGE + 1)
+        );
+      } else if (actionType !== "all") {
         auditLogsQuery = query(
           auditLogsRef,
           where("actionType", "==", actionType),
           orderBy("timestamp", "desc"),
           limit(LOGS_PER_PAGE + 1)
         );
+      } else if (searchTerm) {
+        auditLogsQuery = query(
+          auditLogsRef,
+          where("userEmail", ">=", searchTerm),
+          where("userEmail", "<=", searchTerm + "\uf8ff"),
+          orderBy("userEmail"),
+          orderBy("timestamp", "desc"),
+          limit(LOGS_PER_PAGE + 1)
+        );
       } else {
-        // Simple query with just timestamp sorting
         auditLogsQuery = query(
           auditLogsRef,
           orderBy("timestamp", "desc"),
@@ -366,7 +383,7 @@ const AuditLogsList = ({ searchTerm = "", actionType = "all" }) => {
   }, []);
 
   if (loading && logs.length === 0) {
-    return <Loader3D text="Loading audit logs..." />;
+    return null;
   }
 
   if (error) {
@@ -542,6 +559,7 @@ const AdminDashboard = () => {
   const [actionTypes, setActionTypes] = useState([]);
   // Add new state for tracking payout changes
   const [payoutChanges, setPayoutChanges] = useState({});
+  const { showLoader, hideLoader } = useLoading();
 
   const handleError = useCallback((error, context) => {
     let errorMessage = "An error occurred. Please try again.";
@@ -1116,6 +1134,16 @@ const AdminDashboard = () => {
     [db]
   );
 
+  useEffect(() => {
+    if (loading && activeTab !== "auditLogs") {
+      showLoader(`Loading ${activeTab}...`);
+    } else if (loading && activeTab === "auditLogs") {
+      showLoader("Loading audit logs...");
+    } else {
+      hideLoader();
+    }
+  }, [loading, activeTab]);
+
   return (
     <div className="dashboard admin-dashboard fade-in">
       <div className="dashboard-header">
@@ -1395,9 +1423,7 @@ const AdminDashboard = () => {
       )}
 
       <div className="dashboard-content">
-        {loading && activeTab !== "auditLogs" ? (
-          <Loader3D text={`Loading ${activeTab}...`} />
-        ) : (
+        {loading && activeTab !== "auditLogs" ? null : (
           <>
             {activeTab === "sessions" && (
               <SessionList
@@ -1524,7 +1550,7 @@ const AdminDashboard = () => {
                                   : "Not Contacted"}
                               </button>
                               <a
-                                href={`https://mail.google.com/mail/?view=cm&to=${query.email}&su=Support%20Request%20-%20masaipay`}
+                                href={`https://mail.google.com/mail/?view=cm&to=${query.email}&su=Support%20Request%20-%20masaipe`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="action-btn email-btn"

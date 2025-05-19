@@ -13,8 +13,7 @@ import PayoutList from "../payouts/PayoutList";
 import ChatSection from "../chat/ChatSection";
 import { SESSION_TYPE } from "../../types/index";
 import "./Dashboard.css";
-import Loader3D from "../common/Loader3D";
-import { MdArrowBack, MdArrowForward } from "react-icons/md";
+import { useLoading } from "../../contexts/LoadingContext";
 
 const PAYMENTS_PER_PAGE = 10;
 
@@ -199,14 +198,9 @@ const MentorDashboard = () => {
             }
           })();
 
-        // Correctly determine payment status based on isPaid flag
-        const isPaid = session.isPaid === true;
-
-        // Apply payment status filter
         const matchesPaymentStatus =
           paymentStatusFilter === "all" ||
-          (paymentStatusFilter === "paid" && isPaid) ||
-          (paymentStatusFilter === "unpaid" && !isPaid);
+          session.status === paymentStatusFilter;
 
         return matchesType && matchesDate && matchesPaymentStatus;
       }),
@@ -219,9 +213,15 @@ const MentorDashboard = () => {
       count > 0 ? `(${count}) MentorPay - Dashboard` : "MentorPay - Dashboard";
   }, []);
 
-  if (!currentUser || !userData) {
-    return <Loader3D text="Loading mentor profile..." />;
-  }
+  const { showLoader, hideLoader } = useLoading();
+
+  useEffect(() => {
+    if (loading) {
+      showLoader("Loading mentor profile...");
+    } else {
+      hideLoader();
+    }
+  }, [loading]);
 
   return (
     <div className="dashboard mentor-dashboard fade-in">
@@ -292,31 +292,31 @@ const MentorDashboard = () => {
               className="filter-select"
             >
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="all"
               >
                 All Types
               </option>
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="oneOnOne"
               >
                 One on One
               </option>
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="group"
               >
                 Group Session
               </option>
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="workshop"
               >
                 Workshop
               </option>
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="review"
               >
                 Code Review
@@ -334,19 +334,19 @@ const MentorDashboard = () => {
               className="filter-select"
             >
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="all"
               >
                 All Payment Status
               </option>
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="paid"
               >
                 Paid
               </option>
               <option
-                style={{ color: "white", backgroundColor: "black" }}
+                style={{ backgroundColor: "black", color: "white" }}
                 value="unpaid"
               >
                 Unpaid
@@ -367,18 +367,13 @@ const MentorDashboard = () => {
       )}
 
       <div className="dashboard-content">
-        {loading ? (
-          <Loader3D text={`Loading ${activeTab}...`} />
-        ) : (
+        {loading ? null : (
           <>
             {activeTab === "sessions" && (
               <SessionList
                 sessions={filteredSessions}
                 isAdmin={false}
                 payouts={payouts}
-                scrollable={true}
-                containerClass="mentor-dashboard-sessions"
-                hideScrollButtons={true}
               />
             )}
             {activeTab === "payouts" && (
@@ -390,9 +385,8 @@ const MentorDashboard = () => {
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
                       className="pagination-button"
-                      aria-label="Previous page"
                     >
-                      <MdArrowBack size={20} />
+                      Previous
                     </button>
                     <span className="pagination-info">
                       Page {currentPage} of {totalPages}
@@ -401,9 +395,8 @@ const MentorDashboard = () => {
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
                       className="pagination-button"
-                      aria-label="Next page"
                     >
-                      <MdArrowForward size={20} />
+                      Next
                     </button>
                   </div>
                 )}

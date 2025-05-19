@@ -35,6 +35,7 @@ const SessionCard = ({ session, isAdmin, payouts }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isMarkingAttended, setIsMarkingAttended] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [messageBox, setMessageBox] = useState({
     show: false,
     message: "",
@@ -477,7 +478,7 @@ const SessionCard = ({ session, isAdmin, payouts }) => {
                 )}
               </div>
               <div className="action-buttons-right">
-                {(isPaid || isPending) && isAdmin && (
+                {(isPaid || isPending) && (
                   <PDFDownloadLink
                     document={
                       <PayoutPDF
@@ -597,6 +598,7 @@ const SessionCard = ({ session, isAdmin, payouts }) => {
                   type="date"
                   id="date"
                   name="date"
+                  className="filter-date"
                   value={editedSession.date}
                   onChange={handleEditChange}
                 />

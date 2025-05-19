@@ -350,19 +350,13 @@ const ChatSection = ({ onUnreadCountChange }) => {
   }
 
   return (
-    <div
-      className={`chat-section ${
-        document.documentElement.getAttribute("data-theme") === "dark"
-          ? "dark-mode"
-          : ""
-      }`}
-    >
+    <div className="chat-section">
       {error && <div className="chat-error">{error}</div>}
       <div className="chat-header">
         {userData?.role === "admin" && (
           <div className="partner-selector">
             <select
-              className="filter-date"
+            style={{backgroundColor: "black", color: "white"}}
               value={selectedPartnerId || ""}
               onChange={(e) => {
                 const partnerId = e.target.value;
@@ -372,15 +366,10 @@ const ChatSection = ({ onUnreadCountChange }) => {
                 );
                 setChatPartner(partner);
               }}
-              style={
-                document.documentElement.getAttribute("data-theme") === "dark"
-                  ? { backgroundColor: "black", color: "white" }
-                  : {}
-              }
             >
-              <option value="">Select a mentor to chat with</option>
+              <option style={{backgroundColor: "black", color: "white"}} value="">Select a mentor to chat with</option>
               {availablePartners.map((partner) => (
-                <option key={partner.id} value={partner.id}>
+                <option style={{backgroundColor: "black", color: "white"}} key={partner.id} value={partner.id}>
                   {partner.name
                     ? `${partner.name} (${partner.email})`
                     : partner.email}

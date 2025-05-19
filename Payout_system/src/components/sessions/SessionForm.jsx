@@ -190,8 +190,8 @@ const SessionForm = () => {
               <input
                 type="date"
                 id="date"
-                className="filter-date"
                 name="date"
+                className="filter-date"
                 value={formData.date}
                 onChange={handleChange}
                 min={new Date().toISOString().split("T")[0]}

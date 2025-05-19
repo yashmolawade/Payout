@@ -2,35 +2,35 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { LoadingProvider } from "./contexts/LoadingContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import { lazyLoad } from "./utils/lazyImport.jsx";
-
-// Use improved lazy loading with error boundaries
-const LandingPage = lazyLoad(() => import("./pages/LandingPage"));
-const Home = lazyLoad(() => import("./pages/Home"));
-const Login = lazyLoad(() => import("./pages/Login"));
-const Register = lazyLoad(() => import("./pages/Register"));
+import LandingPage from "./pages/LandingPage";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-            <Route path="/" element={<LandingPage />} />
-          </Routes>
-        </BrowserRouter>
+        <LoadingProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Home />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="/" element={<LandingPage />} />
+            </Routes>
+          </BrowserRouter>
+        </LoadingProvider>
       </ThemeProvider>
     </AuthProvider>
   );

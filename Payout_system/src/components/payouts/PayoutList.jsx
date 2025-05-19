@@ -203,38 +203,8 @@ const PayoutList = ({ payouts, isAdmin }) => {
     window.open(gmailUrl, "_blank");
   };
 
-  if (filteredPayouts.length === 0) {
-    return (
-      <div className="empty-state">
-        <h3>No payouts found</h3>
-        <p>
-          {isAdmin
-            ? "Process payments for completed sessions to see them here."
-            : "You have no payments yet."}
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="payout-list">
-      <div className="payout-summary">
-        <div className="summary-card">
-          <h3>Total Paid</h3>
-          <div className="amount paid">${totalPaid.toFixed(2)}</div>
-        </div>
-        <div className="summary-card">
-          <h3>Total Pending</h3>
-          <div className="amount pending">${totalPending.toFixed(2)}</div>
-        </div>
-        {isAdmin && (
-          <div className="summary-card">
-            <h3>Under Review</h3>
-            <div className="amount review">${totalUnderReview.toFixed(2)}</div>
-          </div>
-        )}
-      </div>
-
       <div className="payout-search">
         <input
           type="text"
@@ -244,85 +214,117 @@ const PayoutList = ({ payouts, isAdmin }) => {
           className="search-input"
         />
       </div>
-
-      <div className="payout-table-container">
-        <table className="payout-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              {isAdmin && <th>Mentor</th>}
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPayouts.map((payout) => (
-              <tr key={payout.id}>
-                <td>{new Date(payout.createdAt).toLocaleDateString()}</td>
-                {isAdmin && <td>{payout.mentorEmail}</td>}
-                <td className="amount">
-                  ${(payout.netAmount || 0).toFixed(2)}
-                </td>
-                <td>
-                  <span className={`status status-${payout.status}`}>
-                    {payout.status === PAYMENT_STATUS.PAID
-                      ? "Paid"
-                      : payout.status === PAYMENT_STATUS.PENDING
-                      ? "Pending"
-                      : "Under Review"}
-                  </span>
-                </td>
-                <td className="actions">
-                  <button
-                    className="action-btn secondary"
-                    onClick={() => handleGeneratePdf(payout)}
-                    title="Download Receipt"
-                  >
-                    Download PDF
-                  </button>
-                  <button
-                    className="action-btn secondary"
-                    onClick={() => handleSendGmail(payout)}
-                    title="Send Receipt via Gmail"
-                  >
-                    Send Receipt (Gmail)
-                  </button>
-
-                  {isAdmin && payout.status === PAYMENT_STATUS.UNDER_REVIEW && (
-                    <button
-                      className="action-btn approve"
-                      onClick={() =>
-                        handleStatusChange(payout, PAYMENT_STATUS.PENDING)
-                      }
-                      disabled={processingId === payout.id}
-                    >
-                      {processingId === payout.id ? "Processing..." : "Approve"}
-                    </button>
-                  )}
-
-                  {isAdmin && payout.status === PAYMENT_STATUS.PENDING && (
-                    <button
-                      className="action-btn primary"
-                      onClick={() => handlePayment(payout)}
-                      disabled={processingId === payout.id}
-                    >
-                      {processingId === payout.id ? "Processing..." : "Pay Now"}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {selectedPayout && (
-        <PaymentModal
-          payout={selectedPayout}
-          onClose={() => setSelectedPayout(null)}
-          onConfirmPayment={handleConfirmPayment}
-        />
+      {filteredPayouts.length === 0 ? (
+        <div className="empty-state">
+          <h3>No payouts found</h3>
+          <p>
+            {isAdmin
+              ? "Process payments for completed sessions to see them here."
+              : "You have no payments yet."}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="payout-summary">
+            <div className="summary-card">
+              <h3>Total Paid</h3>
+              <div className="amount paid">${totalPaid.toFixed(2)}</div>
+            </div>
+            <div className="summary-card">
+              <h3>Total Pending</h3>
+              <div className="amount pending">${totalPending.toFixed(2)}</div>
+            </div>
+            {isAdmin && (
+              <div className="summary-card">
+                <h3>Under Review</h3>
+                <div className="amount review">
+                  ${totalUnderReview.toFixed(2)}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="payout-table-container">
+            <table className="payout-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  {isAdmin && <th>Mentor</th>}
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPayouts.map((payout) => (
+                  <tr key={payout.id}>
+                    <td>{new Date(payout.createdAt).toLocaleDateString()}</td>
+                    {isAdmin && <td>{payout.mentorEmail}</td>}
+                    <td className="amount">
+                      ${(payout.netAmount || 0).toFixed(2)}
+                    </td>
+                    <td>
+                      <span className={`status status-${payout.status}`}>
+                        {payout.status === PAYMENT_STATUS.PAID
+                          ? "Paid"
+                          : payout.status === PAYMENT_STATUS.PENDING
+                          ? "Pending"
+                          : "Under Review"}
+                      </span>
+                    </td>
+                    <td className="actions">
+                      <button
+                        className="action-btn secondary"
+                        onClick={() => handleGeneratePdf(payout)}
+                        title="Download Receipt"
+                      >
+                        Download PDF
+                      </button>
+                      <button
+                        className="action-btn secondary"
+                        onClick={() => handleSendGmail(payout)}
+                        title="Send Receipt via Gmail"
+                      >
+                        Send Receipt (Gmail)
+                      </button>
+                      {isAdmin &&
+                        payout.status === PAYMENT_STATUS.UNDER_REVIEW && (
+                          <button
+                            className="action-btn approve"
+                            onClick={() =>
+                              handleStatusChange(payout, PAYMENT_STATUS.PENDING)
+                            }
+                            disabled={processingId === payout.id}
+                          >
+                            {processingId === payout.id
+                              ? "Processing..."
+                              : "Approve"}
+                          </button>
+                        )}
+                      {isAdmin && payout.status === PAYMENT_STATUS.PENDING && (
+                        <button
+                          className="action-btn primary"
+                          onClick={() => handlePayment(payout)}
+                          disabled={processingId === payout.id}
+                        >
+                          {processingId === payout.id
+                            ? "Processing..."
+                            : "Pay Now"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {selectedPayout && (
+            <PaymentModal
+              payout={selectedPayout}
+              onClose={() => setSelectedPayout(null)}
+              onConfirmPayment={handleConfirmPayment}
+            />
+          )}
+        </>
       )}
     </div>
   );

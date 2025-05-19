@@ -107,8 +107,8 @@ const AuthForm = ({ isLogin }) => {
           <h2>{isLogin ? "Login" : "Register"}</h2>
           <p>
             {isLogin
-              ? "Sign in to your masaipay account"
-              : "Create a new masaipay account"}
+              ? "Sign in to your masaipe account"
+              : "Create a new masaipe account"}
           </p>
         </div>
 
