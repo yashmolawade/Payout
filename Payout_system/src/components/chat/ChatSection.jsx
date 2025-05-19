@@ -52,14 +52,12 @@ const ChatSection = ({ onUnreadCountChange }) => {
   // Fetch available chat partners
   useEffect(() => {
     if (!currentUser || !userData) {
-      console.log("No current user or userData");
       return;
     }
 
     const fetchPartners = async () => {
       try {
         setLoading(true);
-        console.log("Fetching partners for role:", userData.role);
 
         const usersRef = collection(db, "users");
         let partnersQuery;
@@ -81,10 +79,6 @@ const ChatSection = ({ onUnreadCountChange }) => {
         }
 
         const querySnapshot = await getDocs(partnersQuery);
-        console.log("Query results:", {
-          empty: querySnapshot.empty,
-          size: querySnapshot.size,
-        });
 
         const partners = [];
         querySnapshot.forEach((doc) => {
@@ -96,8 +90,6 @@ const ChatSection = ({ onUnreadCountChange }) => {
             name: data.name || "",
           });
         });
-
-        console.log("Found partners:", partners);
 
         if (userData.role === "admin") {
           // Show all mentors in dropdown
@@ -356,11 +348,7 @@ const ChatSection = ({ onUnreadCountChange }) => {
         {userData?.role === "admin" && (
           <div className="partner-selector">
             <select
-<<<<<<< HEAD
               style={{ backgroundColor: "black", color: "white" }}
-=======
-            style={{backgroundColor: "black", color: "white"}}
->>>>>>> 8cff7369a0805f82e8511dc49a8c7263025e57e6
               value={selectedPartnerId || ""}
               onChange={(e) => {
                 const partnerId = e.target.value;

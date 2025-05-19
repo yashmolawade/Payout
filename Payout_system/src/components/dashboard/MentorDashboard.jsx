@@ -113,12 +113,6 @@ const MentorDashboard = () => {
                     : "unpaid"
                   : "unpaid"; // Default to unpaid if isPaid is not a boolean
 
-              console.log("Session data:", {
-                id: doc.id,
-                isPaid: data.isPaid,
-                status: status,
-              });
-
               return {
                 id: doc.id,
                 ...data,
@@ -192,13 +186,6 @@ const MentorDashboard = () => {
 
   // Filter sessions based on type, date, and payment status
   const filteredSessions = useMemo(() => {
-    console.log("Current filter values:", {
-      paymentStatusFilter,
-      sessionTypeFilter,
-      startDateFilter,
-      endDateFilter,
-    });
-
     return sessions.filter((session) => {
       const matchesType =
         sessionTypeFilter === "all" ||
@@ -245,14 +232,6 @@ const MentorDashboard = () => {
         }
       })();
 
-      // Debug payment status matching
-      console.log("Session payment status check:", {
-        sessionId: session.id,
-        sessionStatus: session.status,
-        filterStatus: paymentStatusFilter,
-        isPaid: session.isPaid,
-      });
-
       // Ensure case-insensitive comparison for payment status
       const matchesPaymentStatus =
         paymentStatusFilter === "all" ||
@@ -262,20 +241,7 @@ const MentorDashboard = () => {
           session.status !== "review") ||
         (paymentStatusFilter === "review" && session.status === "review");
 
-      const result = matchesType && matchesDate && matchesPaymentStatus;
-
-      // Debug final result
-      if (paymentStatusFilter !== "all") {
-        console.log("Filter result:", {
-          sessionId: session.id,
-          matchesType,
-          matchesDate,
-          matchesPaymentStatus,
-          finalResult: result,
-        });
-      }
-
-      return result;
+      return matchesType && matchesDate && matchesPaymentStatus;
     });
   }, [
     sessions,

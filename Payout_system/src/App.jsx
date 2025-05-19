@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { LoadingProvider } from "./contexts/LoadingContext";
@@ -14,7 +14,7 @@ function App() {
     <AuthProvider>
       <ThemeProvider>
         <LoadingProvider>
-          <BrowserRouter>
+          <HashRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -29,7 +29,7 @@ function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
               <Route path="/" element={<LandingPage />} />
             </Routes>
-          </BrowserRouter>
+          </HashRouter>
         </LoadingProvider>
       </ThemeProvider>
     </AuthProvider>

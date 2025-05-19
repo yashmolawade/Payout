@@ -37,22 +37,12 @@ class IndexManager {
     } catch (error) {
       // Check if this is a missing index error
       if (this.isIndexError(error)) {
-        console.log("Index error detected, handling automatically...");
-
         // Extract the index details from the error
         const indexDetails = this.extractIndexDetailsFromError(error);
 
         if (indexDetails) {
           // Create a pending index record
           await this.createPendingIndexRecord(indexDetails);
-
-          // Notify the user about the pending index
-          console.log(
-            "A new composite index is being created. This may take a few minutes."
-          );
-          console.log(
-            "You can continue using the application while the index is being built."
-          );
 
           // If using developer console, log helpful message about index creation
           if (process.env.NODE_ENV === "development") {
@@ -172,8 +162,6 @@ class IndexManager {
         ...indexDetails,
         docRef: indexDocRef,
       });
-
-      console.log(`Pending index record created: ${indexId}`);
     } catch (error) {
       console.error("Error creating pending index record:", error);
     }
@@ -222,7 +210,6 @@ class IndexManager {
 
         // Remove from our tracking
         this.pendingIndexes.delete(indexId);
-        console.log(`Index marked as created: ${indexId}`);
       }
     } catch (error) {
       console.error("Error marking index as created:", error);

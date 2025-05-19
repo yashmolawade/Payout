@@ -42,12 +42,10 @@ try {
       tabManager: persistentMultipleTabManager(),
     }),
   });
-  console.log("Firestore initialized with persistent cache");
 } catch (err) {
   console.error("Error initializing Firestore with persistent cache:", err);
   // Fallback to default configuration if persistent cache fails
   db = getFirestore(app);
-  console.log("Firestore initialized with default configuration");
 }
 
 const analytics = getAnalytics(app);
@@ -60,7 +58,6 @@ const verifyAuditLogsCollection = async () => {
     const auditLogsRef = collection(db, "audit_logs");
     const testQuery = query(auditLogsRef, limit(1));
     await getDocs(testQuery);
-    console.log("Audit logs collection verification successful");
     return true;
   } catch (error) {
     console.error("Error verifying audit logs collection:", error);

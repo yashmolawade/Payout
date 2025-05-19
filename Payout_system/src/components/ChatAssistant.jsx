@@ -197,9 +197,6 @@ const ChatAssistant = () => {
             status: "Not Contacted",
             timestamp: Date.now(),
           });
-          console.log("Successfully saved to Firebase:", { name, email });
-        } else {
-          console.log("Email already exists in Firebase:", email);
         }
 
         setMessages((prev) => [

@@ -27,11 +27,8 @@ export const createActivityLog = async (logData) => {
     if (logData.beforeData) logEntry.beforeData = logData.beforeData;
     if (logData.afterData) logEntry.afterData = logData.afterData;
 
-    console.log("Creating activity log:", logEntry);
-
     // Add document to the audit_logs collection
     const docRef = await addDoc(collection(db, "audit_logs"), logEntry);
-    console.log("Activity log created with ID:", docRef.id);
     return docRef.id;
   } catch (error) {
     console.error("Error creating activity log:", error);

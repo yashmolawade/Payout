@@ -18,12 +18,6 @@ const CsvSessionUploader = () => {
   const [currentPreviewPage, setCurrentPreviewPage] = useState(1);
   const entriesPerPage = 5;
 
-  // Log the SESSION_TYPE values for debugging
-  useEffect(() => {
-    console.log("SESSION_TYPE object:", SESSION_TYPE);
-    console.log("Valid session types:", Object.values(SESSION_TYPE));
-  }, []);
-
   const handleFileChange = (e) => {
     setError(""); // Clear previous errors
     setSuccess(""); // Clear previous success messages
@@ -546,4 +540,4 @@ const CsvSessionUploader = () => {
   );
 };
 
-export default CsvSessionUploader; 
+export default CsvSessionUploader;
